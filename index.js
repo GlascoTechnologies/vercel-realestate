@@ -9,6 +9,7 @@ if (process.env.AWS_LAMBDA_FUNCTION_VERSION) {
 } else {
   puppeteer = require("puppeteer");
 }
+
 const scrapeInfiniteScrollItems = async (page) => {
   await page.evaluate(async () => {
     await new Promise((resolve, reject) => {
@@ -23,7 +24,7 @@ const scrapeInfiniteScrollItems = async (page) => {
           clearInterval(timer);
           resolve();
         }
-      }, 100);
+      }, 300);
     });
   });
   const items = await page.evaluate(() => {
@@ -37,8 +38,7 @@ const scrapeInfiniteScrollItems = async (page) => {
   console.log("supopop", items.length);
   return items;
 };
-let posts = [];
-(async () => {
+app.get("/api", async (req, res) => {
   let options = {};
 
   if (process.env.AWS_LAMBDA_FUNCTION_VERSION) {
@@ -61,94 +61,21 @@ let posts = [];
     await page.goto(
       "https://housing.com/in/buy/nellore_andhra_pradesh/property-in-nellore_andhra_pradesh"
     );
+    const items = await scrapeInfiniteScrollItems(page);
+    res.send(await page.title());
 
-    const pinks = [
-      // "https://housing.com/in/buy/hyderabad/property-in-hyderabad",
-      // "https://housing.com/in/buy/bangalore/property-in-bangalore",
-      "    https://housing.com/in/buy/nellore_andhra_pradesh/property-in-nellore_andhra_pradesh",
-      // "https://housing.com/in/buy/searches/M8vPwu793x91iyhc8fj",
-      // "https://housing.com/in/buy/searches/M8vP5rv6o4tbbtqqsp3o",
-    ];
+    console.log(items.length);
+    await page.screenshot({
+      // Screenshot the website using defined options
 
-    for (link of pinks) {
-      await page.goto(link, {
-        waitUntil: "networkidle2",
-        timeout: 900000,
-      });
+      path: "./screenshot.png", // Save the screenshot in current directory
 
-      const items = await scrapeInfiniteScrollItems(page);
-
-      console.log(items);
-      console.log(items.length);
-
-      for (link of items) {
-        await page.goto(link, {
-          waitUntil: "networkidle2",
-          timeout: 900000,
-        });
-
-        console.log("Scraping-->", link);
-
-        const extractedData = await page.evaluate(() => {
-          let h1 = document.querySelector('h1[class="css-1hidc9c"]');
-
-          if (!h1 || h1 == undefined || h1 === "" || h1 === null) {
-            h1 = document.querySelector('div[class="css-1hidc9c"]');
-          }
-          let price = document.querySelector("span[class=css-19rl1ms]");
-
-          if (!price || price === undefined || price === "") {
-            price = document.querySelector("span[class=css-gg3jj9]");
-          }
-          let area = document.querySelector("div[class=css-1k19e3]");
-
-          let address = document.querySelector("div[data-q=address]");
-          let updated = document.querySelector("div[class=css-1iv3lhr]>div");
-          let img = document.querySelector("img[class=css-40aejx]");
-          return {
-            h1: h1 ? h1.innerHTML : null,
-            price: price ? price.innerText : null,
-            area: area ? area.innerText : null,
-            address: address ? address.innerHTML : null,
-            updated: updated ? updated.innerHTML : null,
-            img: img ? img.src : null,
-          };
-        });
-        posts.push({
-          url: link,
-
-          h1: extractedData.h1,
-          price: extractedData.price,
-          area: extractedData.area,
-          address: extractedData.address,
-          updated: extractedData.updated,
-          img: extractedData.img,
-        });
-
-        // const url = link;
-        // const h1 = extractedData.h1;
-        // const area = extractedData.area;
-        // const price = extractedData.price;
-        // const address = extractedData.address;
-        // const updated = extractedData.updated;
-      }
-    }
-
-    posts.push({ ScrapedDate: new Date() });
-    console.log("output: ", posts);
-    console.log("output: ", posts.length);
-    await browser.close();
+      fullPage: true, // take a fullpage screenshot
+    });
   } catch (err) {
     console.error(err);
     return null;
   }
-})();
-
-app.get("/check", async (req, res) => {
-  await res.send("Working");
-});
-app.get("/items", async (req, res) => {
-  await res.status(200).json(posts);
 });
 
 app.listen(process.env.PORT || 3000, () => {
