@@ -24,7 +24,7 @@ const scrapeInfiniteScrollItems = async (page) => {
           clearInterval(timer);
           resolve();
         }
-      }, 300);
+      }, 100);
     });
   });
   const items = await page.evaluate(() => {
@@ -38,7 +38,9 @@ const scrapeInfiniteScrollItems = async (page) => {
   console.log("supopop", items.length);
   return items;
 };
-app.get("/api", async (req, res) => {
+
+let nu = 0;
+(async () => {
   let options = {};
 
   if (process.env.AWS_LAMBDA_FUNCTION_VERSION) {
@@ -62,22 +64,18 @@ app.get("/api", async (req, res) => {
       "https://housing.com/in/buy/nellore_andhra_pradesh/property-in-nellore_andhra_pradesh"
     );
     const items = await scrapeInfiniteScrollItems(page);
-    res.send(await page.title());
+    // res.send(await page.title());
 
-    console.log(items.length);
-    await page.screenshot({
-      // Screenshot the website using defined options
-
-      path: "./screenshot.png", // Save the screenshot in current directory
-
-      fullPage: true, // take a fullpage screenshot
-    });
+    nu = items;
   } catch (err) {
     console.error(err);
     return null;
   }
-});
+})();
 
+app.get("/num", async (req, res) => {
+  res.send(await nu);
+});
 app.listen(process.env.PORT || 3000, () => {
   console.log("Server started on 3000");
 });
