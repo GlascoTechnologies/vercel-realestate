@@ -74,7 +74,7 @@ let nu = 0;
 })();
 
 app.get("/num", async (req, res) => {
-  res.send(await nu);
+  res.sendStatus(200).json(nu);
 });
 app.listen(process.env.PORT || 3000, () => {
   console.log("Server started on 3000");
