@@ -27,7 +27,9 @@ app.get("/api", async (req, res) => {
     let browser = await puppeteer.launch(options);
 
     let page = await browser.newPage();
-    await page.goto("https://www.google.com");
+    await page.goto(
+      "https://www.olx.in/en-in/item/hyundai-creta-sx-top-modal-iid-1703800578"
+    );
     res.send(await page.title());
   } catch (err) {
     console.error(err);
