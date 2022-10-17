@@ -57,25 +57,35 @@ let nu = 0;
     let browser = await puppeteer.launch(options);
 
     let page = await browser.newPage();
-    page.setUserAgent(
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.75 Safari/537.36"
-    );
+    // page.setUserAgent(
+    //   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.75 Safari/537.36"
+    // );
+    await page.setExtraHTTPHeaders({
+      "user-agent":
+        "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36",
+      "upgrade-insecure-requests": "1",
+      accept:
+        "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
+      "accept-encoding": "gzip, deflate, br",
+      "accept-language": "en-US,en;q=0.9,en;q=0.8",
+    });
     await page.goto(
       "https://housing.com/in/buy/nellore_andhra_pradesh/property-in-nellore_andhra_pradesh"
     );
+
     const items = await scrapeInfiniteScrollItems(page);
     // res.send(await page.title());
 
     nu = items;
+    app.get("/num", async (req, res) => {
+      res.json(nu);
+    });
   } catch (err) {
     console.error(err);
     return null;
   }
 })();
 
-app.get("/num", async (req, res) => {
-  res.sendStatus(200).json(nu);
-});
 app.listen(process.env.PORT || 3000, () => {
   console.log("Server started on 3000");
 });
