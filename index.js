@@ -36,7 +36,7 @@ app.get("/api", async (req, res) => {
 });
 
 app.listen(process.env.PORT || 3000, () => {
-  console.log("Server started");
+  console.log("Server started on 3000");
 });
 
 module.exports = app;
